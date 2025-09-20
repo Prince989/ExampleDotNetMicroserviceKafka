@@ -26,7 +26,7 @@ public class CreateProductHandler
 
         var result = await _repository.InsertAsync(product);
 
-        await _messageProvider.PublishAsync("product.inserted", result);
+        await _messageProvider.PublishAsync("product.created", result);
         
         return result;
     }

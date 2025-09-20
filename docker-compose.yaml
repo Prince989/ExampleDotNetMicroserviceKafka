@@ -53,18 +53,18 @@ services:
 #    networks:
 #      - market_network
 #
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-#    container_name: elasticsearch
-#    environment:
-#      - discovery.type=single-node
-#      - xpack.security.enabled=false
-#    ports:
-#      - "9200:9200"
-#    volumes:
-#      - es_data:/usr/share/elasticsearch/data
-#    networks:
-#      - market_network
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: market_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - market_network
 
   product-service:
     build:
@@ -135,6 +135,25 @@ services:
       - "3000:3000"
     networks:
       - market_network
+
+  search-service:
+    build:
+      context: ./SearchService
+      dockerfile: ./src/SearchService.Api/Dockerfile
+    container_name: market_search_service
+    depends_on:
+      - kafka
+      - elasticsearch
+#      - redis
+    environment:
+      - ASPNETCORE_URLS=http://+:8004
+      - Kafka__BootstrapServers=kafka:9092
+      - Elastic__Uri=http://elasticsearch:9200
+      - Redis__Connection=redis:6379
+    networks:
+      - market_network
+    ports:
+      - "8004:8004"
 
 networks:
   market_network:

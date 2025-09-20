@@ -53,6 +53,24 @@
         "DELETE"
       ],
       "SwaggerKey": "auth-service"
+    },
+    {
+      "DownstreamPathTemplate": "/api/search/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "search-service",
+          "Port": 8004
+        }
+      ],
+      "UpstreamPathTemplate": "/api/search/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "search-service"
     }
   ],
   "SwaggerEndPoints": [
@@ -72,7 +90,7 @@
         {
           "Name": "Order Service API",
           "Version": "v1",
-          "Url": "http://order-service:8002/swagger/v1/swagger.json"
+          "Url": "http://order-service:8003/swagger/v1/swagger.json"
         }
       ]
     },
@@ -83,6 +101,16 @@
           "Name": "Auth Service API",
           "Version": "v1",
           "Url": "http://auth-service:8000/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "search-service",
+      "Config": [
+        {
+          "Name": "Search Service API",
+          "Version": "v1",
+          "Url": "http://search-service:8004/swagger/v1/swagger.json"
         }
       ]
     }
