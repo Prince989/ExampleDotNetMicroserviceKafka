@@ -3,7 +3,7 @@ using System.Text.Json;
 using MongoDB.Driver; // if you want to catch duplicate key
 using ProductService.Application.Common;
 
-namespace ProductService.Api.Middleware;
+namespace OrderService.Api.Middleware;
 
 public sealed class ExceptionMappingMiddleware
 {

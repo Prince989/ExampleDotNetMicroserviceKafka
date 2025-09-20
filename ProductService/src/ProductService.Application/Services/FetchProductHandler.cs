@@ -1,7 +1,7 @@
 ﻿using ProductService.Application.Abstractions;
 using ProductService.Domain.Product;
 
-namespace ProductService.Application.Repository;
+namespace ProductService.Application.Services;
 
 public class FetchProductHandler
 {

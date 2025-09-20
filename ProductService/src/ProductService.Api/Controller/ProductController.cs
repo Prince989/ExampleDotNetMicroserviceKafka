@@ -1,8 +1,9 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProductService.Application.Common;
 using ProductService.Application.DTOs;
-using ProductService.Application.Repository;
+using ProductService.Application.Services;
 using ProductService.Domain.Product;
 
 namespace ProductService.Api.Controller;
@@ -42,6 +43,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = "Seller")]
     [Route("{id}")]
     public async Task<IActionResult> Put([FromBody] ProductDto product, [FromRoute] string id)
     {
@@ -55,14 +57,19 @@ public class ProductController : ControllerBase
 
     [HttpGet]
     [Route("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> Get([FromRoute] string id)
     {
         var result = await _fetchProductHandler.FetchOne(id);
 
+        if (result == null)
+            throw new NotFoundException("Product not found");
+        
         return Ok(result);
     }
     
     [HttpDelete]
+    [Authorize(Roles = "Seller")]
     [Route("{id}")]
     public async Task<IActionResult> Delete([FromRoute] string id)
     {
@@ -74,6 +81,7 @@ public class ProductController : ControllerBase
     }
     
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> Get()
     {
         var result = await _fetchProductHandler.FetchAll();

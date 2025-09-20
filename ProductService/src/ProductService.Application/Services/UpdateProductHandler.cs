@@ -3,7 +3,7 @@ using ProductService.Application.Common;
 using ProductService.Application.DTOs;
 using ProductService.Domain.Product;
 
-namespace ProductService.Application.Repository;
+namespace ProductService.Application.Services;
 
 public class UpdateProductHandler
 {

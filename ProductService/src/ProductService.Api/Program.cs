@@ -1,13 +1,12 @@
 using System.Security.Claims;
 using System.Text;
-using AuthService.Application.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using ProductService.Api.Middleware;
 using ProductService.Application.Abstractions;
-using ProductService.Application.Repository;
+using ProductService.Application.Services;
 using ProductService.Infrastructure.Database;
 using ProductService.Infrastructure.Message;
 

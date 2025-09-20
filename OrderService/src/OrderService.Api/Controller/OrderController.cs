@@ -11,12 +11,12 @@ namespace OrderService.Api.Controller;
 [Route("api/[controller]")]
 public class OrderController : ControllerBase
 {
-    private readonly ICreateOrderHandler _createOrderHandler;
-    private readonly IGetOrdersHandler _getOrderHandler;
+    private readonly CreateOrderHandler _createOrderHandler;
+    private readonly GetOrdersHandler _getOrderHandler;
 
     public OrderController(
-        ICreateOrderHandler createOrderHandler,
-        IGetOrdersHandler getOrderHandler
+        CreateOrderHandler createOrderHandler,
+        GetOrdersHandler getOrderHandler
     )
     {
         _createOrderHandler = createOrderHandler;
@@ -24,6 +24,7 @@ public class OrderController : ControllerBase
     }
 
     [Authorize(Roles = "Buyer")]
+    [HttpPost]
     public async Task<IActionResult> PostOrder([FromBody] OrderDto order, CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -35,14 +36,15 @@ public class OrderController : ControllerBase
     }
 
     [Authorize(Roles = "Buyer,Seller")]
-    public async Task<IActionResult> GetOrders([FromBody] OrderDto order, CancellationToken ct)
+    [HttpGet]
+    public async Task<IActionResult> GetOrders(CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                      ?? throw new UnauthorizedException("User id missing in token");
         var role = User.FindFirstValue(ClaimTypes.Role)
             ?? throw new ForbiddenException("Access Forbidden");
         
-        var result = await _getOrderHandler.Handle(role, userId, ct);
+        var result = await _getOrderHandler.Handle( userId, role, ct);
 
         return Ok(result);
     }

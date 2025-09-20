@@ -9,7 +9,7 @@ using OrderService.Application.Services;
 using OrderService.Infrastructure.Database;
 using OrderService.Infrastructure.Http;
 using OrderService.Infrastructure.Message;
-using ProductService.Api.Middleware;
+using OrderService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +21,7 @@ var config = builder.Configuration;
 
 var jwtConfig = config.GetSection("Jwt");
 
-var kafkaBootstrapServer = config["Kafka:BootstrapServer"] ?? "http://localhost:9092";
+var kafkaBootstrapServer = config["Kafka:BootstrapServers"] ?? "localhost:9092";
 
 var connectionString = config.GetConnectionString("Mongo");
 
@@ -32,6 +32,8 @@ var database = mongoClient.GetDatabase("OrderDB");
 builder.Services.AddHttpClient<IProductHttpClient, ProductHttpClient>(client =>
     client.BaseAddress = new Uri(config["ProductApiUrl"] ?? "http://product-service:8002")
 );
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
     {
@@ -64,7 +66,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "OrderService API", Version = "v1" });
 
     // 🔐 JWT Bearer definition
     var securityScheme = new OpenApiSecurityScheme
@@ -96,12 +98,6 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionMappingMiddleware>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -109,7 +105,7 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductService API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "OrderService API v1");
     c.DisplayRequestDuration();
     c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
     c.ConfigObject.AdditionalItems["persistAuthorization"] = true; // keep token after refresh

@@ -5,12 +5,7 @@ using ProductService.Application.Common;
 
 namespace OrderService.Application.Services;
 
-public interface ICreateOrderHandler
-{
-    Task<Order> Handle(OrderDto data, string userId, CancellationToken ct);
-}
-
-public class CreateOrderHandler : ICreateOrderHandler
+public class CreateOrderHandler
 {
     private readonly IRepository _repository;
     private readonly IMessageProvider _messageProvider;
@@ -34,12 +29,21 @@ public class CreateOrderHandler : ICreateOrderHandler
         if (data.address == null)
             throw new ValidationException("Address is missing");
 
-        var product = await _productHttpClient.GetProductByIdAsync(data.productId, ct);
+        ProductDto product;
+
+        try
+        {
+            product = await _productHttpClient.GetProductByIdAsync(data.productId, ct);
+        }
+        catch (NotFoundException ex)
+        {
+            throw new NotFoundException("Product not found");
+        }
 
         if (product == null || product.Id == null)
             throw new NotFoundException("Product not found");
 
-        var order = new Order(product.Name, product.Id, userId, product.SellerId, data.address, product.Price, data.postalCode);
+        var order = new Order(product.Name, product.Id, userId, product.SellerId, data.address, data.quantity, product.Price, data.postalCode);
 
         var createdOrder = await _repository.InsertAsync(order);
 

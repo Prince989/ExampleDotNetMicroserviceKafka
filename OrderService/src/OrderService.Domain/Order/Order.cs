@@ -10,6 +10,7 @@ public class Order
     public string SellerId { get; set; }
     public string Address { get; set; }
     public string PostalCode { get; set; }
+    public int Quantity { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
@@ -19,6 +20,7 @@ public class Order
         string userId,
         string sellerId,
         string address,
+        int quantity,
         decimal price,
         string postalCode
     )
@@ -30,6 +32,7 @@ public class Order
         SellerId = sellerId;
         Address = address;
         Price = price;
+        Quantity = quantity;
         PostalCode = postalCode;
         CreatedAt = DateTime.Now;
         UpdatedAt = DateTime.Now;

@@ -17,6 +17,24 @@
         "DELETE"
       ],
       "SwaggerKey": "product-service"
+    },    
+    {
+      "DownstreamPathTemplate": "/api/order/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "order-service",
+          "Port": 8003
+        }
+      ],
+      "UpstreamPathTemplate": "/api/order/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "order-service"
     },
     {
       "DownstreamPathTemplate": "/api/auth/{everything}",
@@ -45,6 +63,16 @@
           "Name": "Product Service API",
           "Version": "v1",
           "Url": "http://product-service:8002/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "order-service",
+      "Config": [
+        {
+          "Name": "Order Service API",
+          "Version": "v1",
+          "Url": "http://order-service:8002/swagger/v1/swagger.json"
         }
       ]
     },
