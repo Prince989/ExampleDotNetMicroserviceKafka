@@ -1,15 +1,15 @@
 using System.Security.Claims;
 using System.Text;
-using AuthService.Application.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using OrderService.Application.Abstractions;
+using OrderService.Application.Services;
+using OrderService.Infrastructure.Database;
+using OrderService.Infrastructure.Http;
+using OrderService.Infrastructure.Message;
 using ProductService.Api.Middleware;
-using ProductService.Application.Abstractions;
-using ProductService.Application.Repository;
-using ProductService.Infrastructure.Database;
-using ProductService.Infrastructure.Message;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,21 +17,21 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
-builder.Services.AddControllers();
-
 var config = builder.Configuration;
+
+var jwtConfig = config.GetSection("Jwt");
+
+var kafkaBootstrapServer = config["Kafka:BootstrapServer"] ?? "http://localhost:9092";
+
 var connectionString = config.GetConnectionString("Mongo");
 
 var mongoClient = new MongoClient(connectionString);
-var mongoDatabase = mongoClient.GetDatabase("ProductDB");
 
-var jwtConfig = builder.Configuration.GetSection("Jwt");
+var database = mongoClient.GetDatabase("OrderDB");
 
-var kafkaAddress = config.GetValue<string>("Kafka:BootstrapServers") ?? "localhost:9092";
-
-builder.Services.AddSingleton(new KafkaProducer(kafkaAddress));
+builder.Services.AddHttpClient<IProductHttpClient, ProductHttpClient>(client =>
+    client.BaseAddress = new Uri(config["ProductApiUrl"] ?? "http://product-service:8002")
+);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
     {
@@ -47,19 +47,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 );
 
 
-builder.Services.AddSingleton<IMongoDatabase>(mongoDatabase);
-
-builder.Services.AddScoped<IRepository, MongoProductRepository>();
-
-builder.Services.AddScoped<CreateProductHandler>();
-builder.Services.AddScoped<UpdateProductHandler>();
-builder.Services.AddScoped<FetchProductHandler>();
-builder.Services.AddScoped<DeleteProductHandler>();
+builder.Services.AddSingleton(new KafkaProducer(kafkaBootstrapServer));
 
 builder.Services.AddSingleton<IMessageProvider>(sp =>
-    sp.GetRequiredService<KafkaProducer>());
+    sp.GetRequiredService<KafkaProducer>()
+);
 
+builder.Services.AddSingleton<IMongoDatabase>(database);
+
+builder.Services.AddScoped<IRepository, MongoRepository>();
+builder.Services.AddScoped<CreateOrderHandler>();
+builder.Services.AddScoped<GetOrdersHandler>();
+
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService API", Version = "v1" });
@@ -89,12 +91,18 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(securityRequirement);
 });
 
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionMappingMiddleware>();
 
-app.UseHttpsRedirection();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -106,7 +114,6 @@ app.UseSwaggerUI(c =>
     c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
     c.ConfigObject.AdditionalItems["persistAuthorization"] = true; // keep token after refresh
 });
-
 
 app.MapControllers();
 

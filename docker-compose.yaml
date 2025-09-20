@@ -84,6 +84,25 @@ services:
       - "8002:8002"
     networks:
       - market_network
+      
+  order-service:
+    build:
+      context: ./OrderService/
+      dockerfile: ./src/OrderService.Api/Dockerfile
+    container_name: market_order_service
+    depends_on:
+      - mongodb
+      - kafka
+#      - redis
+    environment:
+      - ASPNETCORE_URLS=http://+:8003
+      - ConnectionStrings__Mongo=mongodb://mongodb:27017/MarketPlaceDB
+      - Kafka__BootstrapServers=kafka:9092
+      - Redis__Connection=redis:6379
+    ports:
+      - "8003:8003"
+    networks:
+      - market_network
 
   auth-service:
     build:

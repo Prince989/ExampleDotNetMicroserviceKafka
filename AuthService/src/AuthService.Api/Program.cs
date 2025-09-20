@@ -36,7 +36,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 );
 
 var mongoClient = new MongoClient(config.GetConnectionString("Mongo"));
-var mongoDatabase = mongoClient.GetDatabase("MarketPlaceDB");
+var mongoDatabase = mongoClient.GetDatabase("UserDB");
 builder.Services.AddSingleton<IMongoDatabase>(mongoDatabase);
 
 builder.Services.AddSingleton(jwtOptions!);
