@@ -1,5 +1,6 @@
 ﻿using SearchService.Application.Abstractions;
 using SearchService.Application.Common;
+using SearchService.Application.DTOs;
 using SearchService.Domain.Entities;
 using SearchService.Domain.SortingType;
 
@@ -33,6 +34,13 @@ public class SearchHandler
             throw new ValidationException("maxPrice cannot be less than minPrice");
         
         var results = await _repository.SearchAsync(q,min,max,sorting);
+        
+        return results;
+    }
+
+    public async Task<IEnumerable<PopularProduct>> GetPopularProducts(int size)
+    {
+        var results = await _repository.PopularProducts(size);
         
         return results;
     }

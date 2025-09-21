@@ -4,6 +4,7 @@ using SearchService.Api.Middleware;
 using SearchService.Application.Abstractions;
 using SearchService.Application.Services;
 using SearchService.Domain.Entities;
+using SearchService.Infrastructure.Cache;
 using SearchService.Infrastructure.Elastic;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,13 @@ var kafkaBootstrap = builder.Configuration["Kafka:BootstrapServers"] ?? "localho
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+builder.Services.AddStackExchangeRedisCache(opt =>
+{
+    opt.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+});
+
+builder.Services.AddSingleton<ICacheRepository, CachedRepository>();
 
 builder.Services.AddHostedService(sp => new KafkaConsumer(
     sp.GetRequiredService<ISearchRepository>(),
