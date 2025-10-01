@@ -1,0 +1,121 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/product/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "product-service-svc.marketplace.svc.cluster.local",
+          "Port": 8002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/product/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "product-service"
+    },    
+    {
+      "DownstreamPathTemplate": "/api/order/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "order-service",
+          "Port": 8003
+        }
+      ],
+      "UpstreamPathTemplate": "/api/order/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "order-service"
+    },
+    {
+      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service-svc.marketplace.svc.cluster.local",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "auth-service"
+    },
+    {
+      "DownstreamPathTemplate": "/api/search/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "search-service-svc.marketplace.svc.cluster.local",
+          "Port": 8004
+        }
+      ],
+      "UpstreamPathTemplate": "/api/search/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "SwaggerKey": "search-service"
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "product-service",
+      "Config": [
+        {
+          "Name": "Product Service API",
+          "Version": "v1",
+          "Url": "http://product-service-svc.marketplace.svc.cluster.local:8002/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "order-service",
+      "Config": [
+        {
+          "Name": "Order Service API",
+          "Version": "v1",
+          "Url": "http://order-service-svc.marketplace.svc.cluster.local:8003/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "auth-service",
+      "Config": [
+        {
+          "Name": "Auth Service API",
+          "Version": "v1",
+          "Url": "http://auth-service-svc.marketplace.svc.cluster.local:8000/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "search-service",
+      "Config": [
+        {
+          "Name": "Search Service API",
+          "Version": "v1",
+          "Url": "http://search-service-svc.marketplace.svc.cluster.local:8004/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:3000"
+  }
+}

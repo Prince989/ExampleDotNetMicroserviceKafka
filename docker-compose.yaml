@@ -1,0 +1,163 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: market_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - market_network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: market_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - market_network
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  mongodb:
+    image: mongo:6.0
+    container_name: market_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - market_network
+
+  redis:
+    image: redis:7
+    container_name: market_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - market_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: market_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - market_network
+
+  product-service:
+    build:
+      context: ./ProductService/
+      dockerfile: ./src/ProductService.Api/Dockerfile
+    container_name: market_product_service
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - ASPNETCORE_URLS=http://+:8002
+      - ConnectionStrings__Mongo=mongodb://mongodb:27017/MarketPlaceDB
+      - Kafka__BootstrapServers=kafka:9092
+      - Redis__Connection=redis:6379
+    ports:
+      - "8002:8002"
+    networks:
+      - market_network
+      
+  order-service:
+    build:
+      context: ./OrderService/
+      dockerfile: ./src/OrderService.Api/Dockerfile
+    container_name: market_order_service
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - ASPNETCORE_URLS=http://+:8003
+      - ConnectionStrings__Mongo=mongodb://mongodb:27017/MarketPlaceDB
+      - Kafka__BootstrapServers=kafka:9092
+      - Redis__Connection=redis:6379
+    ports:
+      - "8003:8003"
+    networks:
+      - market_network
+
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: ./src/AuthService.Api/Dockerfile
+    container_name: market_auth_service
+    depends_on:
+      - mongodb
+    environment:
+      - ASPNETCORE_URLS=http://+:8000
+      - Kafka__BootstrapServers=kafka:9092
+      - ConnectionStrings__Mongo=mongodb://mongodb:27017/MarketPlaceDB
+      - Elastic__Uri=http://elasticsearch:9200
+    networks:
+      - market_network
+    ports:
+      - "8000:8000"
+
+  api-gateway:
+    build:
+      context: ./ApiGateway
+    container_name: market_api_gateway
+    depends_on:
+      - product-service
+      - auth-service
+    environment:
+      - ASPNETCORE_URLS=http://+:3000
+    ports:
+      - "3000:3000"
+    networks:
+      - market_network
+
+  search-service:
+    build:
+      context: ./SearchService
+      dockerfile: ./src/SearchService.Api/Dockerfile
+    container_name: market_search_service
+    depends_on:
+      - kafka
+      - elasticsearch
+      - redis
+    environment:
+      - ASPNETCORE_URLS=http://+:8004
+      - Kafka__BootstrapServers=kafka:9092
+      - Elastic__Uri=http://elasticsearch:9200
+      - Redis__Connection=redis:6379
+    networks:
+      - market_network
+    ports:
+      - "8004:8004"
+
+networks:
+  market_network:
+    driver: bridge
+
+
+volumes:
+  mongo_data:
+  redis_data:
+  es_data:
